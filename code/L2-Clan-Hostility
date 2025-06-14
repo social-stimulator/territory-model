@@ -1,0 +1,285 @@
+;; MODEL INFO ;;
+;; This model tries to simulate the stealing and claiming of territory between different clans
+;; Clans are made up of agents of the same color. Each agent consumes resources from patches to gain energy.
+;; Resources eventually tend to 0. If energy = 0, agent dies. In each run all agents die at the end
+;; To move, agents look at their neighbouring patches and move to a patch with the max amount of resources
+;; Each agent can only consume resources from the land which is claimed by their clan or from the land which is unoccupied.
+;; Agent eats from a patch, and claims it as the territory of the clan it belongs to.
+;; Agents can steal land from another clan if the energy of the stealer agent is greater than the energy of the nearest agent from the opposing clan
+
+;; Additions to be made ;;
+;; Turtles move in a more strategic way, have visibility of larger area to determine where to move
+;; change sequence of actions to see who steals first - DONE
+;; could add another rule - if the energy of the stealer is less, does it concede land? turn one of neighbouring patches of the enemy color ?
+;; will be so interesting when we add reproduction
+;; distribution of agents - over a bigger area?
+;; next iteration with all 4 colors - DONE
+
+
+;; basic setting up of environment ;;
+patches-own [resources]
+turtles-own [energy]
+breed [ green-agent green-clan ]
+breed [ blue-agent blue-clan ]
+breed [ red-agent red-clan ]
+breed [ yellow-agent yellow-clan ]
+
+
+to setup
+clear-all
+
+create-green-agent num-green-clan [
+    set size 1
+    set shape "person"
+    set color green
+    set energy random 100
+  ]
+
+ create-blue-agent num-blue-clan [
+    set size 1
+    set shape "person"
+    set color blue
+    set energy random 100
+  ]
+
+  create-red-agent num-red-clan [
+    set size 1
+    set shape "person"
+    set color red
+    set energy random 100
+  ]
+
+ create-yellow-agent num-yellow-clan [
+    set size 1
+    set shape "person"
+    set color yellow
+    set energy random 100
+  ]
+
+ask patches [set pcolor white
+  set resources random 100
+  set plabel resources
+  set plabel-color black
+  ]
+  reset-ticks
+end
+
+to distribute
+  ask green-agent [ setxy random-float min-pxcor random-float min-pycor ]
+  ask yellow-agent [ setxy random-float max-pxcor random-float max-pycor ]
+  ask blue-agent [ setxy random-float min-pxcor random-float max-pycor ]
+  ask red-agent [ setxy random-float max-pxcor random-float min-pycor]
+end
+
+to go
+tick
+move
+claim-territory
+  if green-hostile?
+  [steal-green]
+  if yellow-hostile?
+  [steal-yellow]
+  if red-hostile?
+  [steal-red]
+  if blue-hostile?
+  [steal-blue]
+death
+update-patch-colors
+end
+
+to move
+  ask turtles [
+    ifelse one-of neighbors with [pcolor = white] = nobody
+    [ let p max-one-of neighbors [resources]
+        face p
+        move-to p
+    ]
+    [ move-to one-of neighbors with [ pcolor = white] ]
+    set energy energy - 5
+  ]
+end
+
+to claim-territory
+  ask turtles [
+  if pcolor = white or pcolor = color [
+  if resources > 0 [
+    set resources resources - 10
+    set energy energy + 10
+    set pcolor color
+    set plabel resources
+  ]
+  if resources <= 0 [
+        set pcolor black
+      ]
+    ]
+  ]
+end
+
+to death
+  ask turtles [
+    if energy <= 0 [die]
+  ]
+end
+
+to update-patch-colors
+  let white-patches patches with [pcolor = white]
+  let grey-patches patches with [pcolor = grey]
+  let red-patches patches with [pcolor = red]
+  let blue-patches patches with [pcolor = blue]
+  let black-patches patches with [pcolor = black]
+  let green-patches patches with [pcolor = green]
+  ask patches [ set plabel resources
+    if resources <= 1 [ set pcolor black ]
+  ]
+
+end
+
+to steal-blue ;; blue clan steals from other clans
+  ask blue-agent [
+    if (pcolor = green) and  (resources > 1 ) [  ;; if the blue agent is on a green patch with resources
+      ifelse count green-agent > 0  ;; and if there are green agents present
+      [ let p min-one-of green-agent [ distance myself ] ;; inspect closest agent and check energy
+      if [energy] of p < energy [ ;; if more energy, steal territory
+          steal-territory ] ]
+      [ steal-territory]
+    ]
+  ]
+    ask blue-agent [
+    if (pcolor = red) and  (resources > 1 ) [  ;; if the blue agent is on a green patch with resources
+      ifelse count red-agent > 0  ;; and if there are green agents present
+      [ let p min-one-of red-agent [ distance myself ] ;; inspect closest agent and check energy
+      if [energy] of p < energy [ ;; if more energy, steal territory
+          steal-territory ] ]
+      [ steal-territory]
+    ]
+  ]
+    ask blue-agent [
+    if (pcolor = yellow) and  (resources > 1 ) [  ;; if the blue agent is on a green patch with resources
+      ifelse count yellow-agent > 0  ;; and if there are green agents present
+      [ let p min-one-of yellow-agent [ distance myself ] ;; inspect closest agent and check energy
+      if [energy] of p < energy [ ;; if more energy, steal territory
+          steal-territory ] ]
+      [ steal-territory]
+    ]
+  ]
+end
+
+to steal-green ;; green clan steals from blue clan
+ask green-agent [
+    if (pcolor = blue) and  (resources > 1 ) [  ;; if the green agent is on a blue patch with resources
+      ifelse count blue-agent > 0  ;; and if there are blue agents present
+      [ let p min-one-of blue-agent [ distance myself ] ;; inspect closest agent and check energy
+      if [energy] of p < energy [ ;; if more energy, steal territory
+          steal-territory ] ]
+      [ steal-territory]
+    ]
+  ]
+   ask green-agent [
+    if (pcolor = red) and  (resources > 1 ) [  ;; if the blue agent is on a green patch with resources
+      ifelse count red-agent > 0  ;; and if there are green agents present
+      [ let p min-one-of red-agent [ distance myself ] ;; inspect closest agent and check energy
+      if [energy] of p < energy [ ;; if more energy, steal territory
+          steal-territory ] ]
+      [ steal-territory]
+    ]
+  ]
+    ask green-agent [
+    if (pcolor = yellow) and  (resources > 1 ) [  ;; if the blue agent is on a green patch with resources
+      ifelse count yellow-agent > 0  ;; and if there are green agents present
+      [ let p min-one-of yellow-agent [ distance myself ] ;; inspect closest agent and check energy
+      if [energy] of p < energy [ ;; if more energy, steal territory
+          steal-territory ] ]
+      [ steal-territory]
+    ]
+  ]
+end
+
+to steal-yellow ;; green clan steals from blue clan
+ask yellow-agent [
+    if (pcolor = blue) and  (resources > 1 ) [  ;; if the green agent is on a blue patch with resources
+      ifelse count blue-agent > 0  ;; and if there are blue agents present
+      [ let p min-one-of blue-agent [ distance myself ] ;; inspect closest agent and check energy
+      if [energy] of p < energy [ ;; if more energy, steal territory
+          steal-territory ] ]
+      [ steal-territory]
+    ]
+  ]
+   ask yellow-agent [
+    if (pcolor = red) and  (resources > 1 ) [  ;; if the blue agent is on a green patch with resources
+      ifelse count red-agent > 0  ;; and if there are green agents present
+      [ let p min-one-of red-agent [ distance myself ] ;; inspect closest agent and check energy
+      if [energy] of p < energy [ ;; if more energy, steal territory
+          steal-territory ] ]
+      [ steal-territory]
+    ]
+  ]
+    ask yellow-agent [
+    if (pcolor = green) and  (resources > 1 ) [  ;; if the blue agent is on a green patch with resources
+      ifelse count green-agent > 0  ;; and if there are green agents present
+      [ let p min-one-of green-agent [ distance myself ] ;; inspect closest agent and check energy
+      if [energy] of p < energy [ ;; if more energy, steal territory
+          steal-territory ] ]
+      [ steal-territory]
+    ]
+  ]
+end
+
+to steal-red ;; green clan steals from blue clan
+ask red-agent [
+    if (pcolor = blue) and  (resources > 1 ) [  ;; if the green agent is on a blue patch with resources
+      ifelse count blue-agent > 0  ;; and if there are blue agents present
+      [ let p min-one-of blue-agent [ distance myself ] ;; inspect closest agent and check energy
+      if [energy] of p < energy [ ;; if more energy, steal territory
+          steal-territory ] ]
+      [ steal-territory]
+    ]
+  ]
+   ask red-agent [
+    if (pcolor = yellow) and  (resources > 1 ) [  ;; if the blue agent is on a green patch with resources
+      ifelse count yellow-agent > 0  ;; and if there are green agents present
+      [ let p min-one-of yellow-agent [ distance myself ] ;; inspect closest agent and check energy
+      if [energy] of p < energy [ ;; if more energy, steal territory
+          steal-territory ] ]
+      [ steal-territory]
+    ]
+  ]
+    ask red-agent [
+    if (pcolor = green) and  (resources > 1 ) [  ;; if the blue agent is on a green patch with resources
+      ifelse count green-agent > 0  ;; and if there are green agents present
+      [ let p min-one-of green-agent [ distance myself ] ;; inspect closest agent and check energy
+      if [energy] of p < energy [ ;; if more energy, steal territory
+          steal-territory ] ]
+      [ steal-territory]
+    ]
+  ]
+end
+
+
+to steal-territory
+    ifelse resources >= 1 [
+    set resources resources - 10
+    set energy energy + 10
+    set pcolor color
+   set plabel resources ]
+     [ set pcolor black ]
+end
+
+to-report green-resources
+  let green-patches patches with [ pcolor = green ]
+  report sum [resources] of green-patches
+end
+
+to-report blue-resources
+  let blue-patches patches with [ pcolor = blue ]
+  report sum [resources] of blue-patches
+end
+
+to-report red-resources
+  let red-patches patches with [ pcolor = red ]
+  report sum [resources] of red-patches
+end
+
+to-report yellow-resources
+  let yellow-patches patches with [ pcolor = yellow ]
+  report sum [resources] of yellow-patches
+end
