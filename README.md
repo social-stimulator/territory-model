@@ -28,9 +28,13 @@ Level 3 : Introducing hostility
 Clans can be turned hostile from a switch placed on the NetLogo interface. This enables the hostile clan to claim resources from other clans under particular conditions. After encountering a patch claimed by a different clan, the agent belonging to the hostile clan scans for the nearest agent of the opposing clan, and compares the energy levels of both the agents. If the hostile agent has more energy than the nearest agent of the opposing clan, the hostile agent takes the patch over and claims it for its own clan. Else, it passes through the patch without claiming any resources.
 
 Features to be added ; 
+
 Renewal rate for resources 
 
 Reproduction in agents [if they reach a certain energy threshold 
+
 Longer range of visibility for agents, enabling strategic movements towards areas with higher resources [ currently limited only to adjoining 8 patches 
+
 Conditional hostility responses, triggered when a neighbouring clan turns hostile 
+
 Comparison of the total energy levels of competing clans to determine the result of an attempt to takeover enemy territory.
