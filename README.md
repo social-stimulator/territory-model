@@ -29,6 +29,7 @@ Clans can be turned hostile from a switch placed on the NetLogo interface. This 
 
 Features to be added ; 
 Renewal rate for resources 
+
 Reproduction in agents [if they reach a certain energy threshold 
 Longer range of visibility for agents, enabling strategic movements towards areas with higher resources [ currently limited only to adjoining 8 patches 
 Conditional hostility responses, triggered when a neighbouring clan turns hostile 
